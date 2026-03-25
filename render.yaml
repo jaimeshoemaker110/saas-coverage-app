@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: saas-coverage-app
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+    disk:
+      name: saas-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
+
+# Made with Bob
