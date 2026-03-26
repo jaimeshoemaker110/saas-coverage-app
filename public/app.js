@@ -4,9 +4,10 @@ const API_BASE = window.location.hostname === 'localhost'
     : '/api';
 
 // DOM Elements
-const coverageSelect = document.getElementById('coverage-select');
+const coverageCheckboxes = document.getElementById('coverage-checkboxes');
 const searchBtn = document.getElementById('search-btn');
 const clearBtn = document.getElementById('clear-btn');
+const selectAllBtn = document.getElementById('select-all-btn');
 const loadingDiv = document.getElementById('loading');
 const resultsSection = document.getElementById('results-section');
 const errorMessage = document.getElementById('error-message');
@@ -35,7 +36,7 @@ async function init() {
     }
 }
 
-// Load coverage IDs into dropdown
+// Load coverage IDs into checkboxes
 async function loadCoverageIds() {
     try {
         const response = await fetch(`${API_BASE}/coverage-ids`);
@@ -45,12 +46,27 @@ async function loadCoverageIds() {
         
         const coverageIds = await response.json();
         
-        // Populate dropdown
+        // Populate checkboxes
         coverageIds.forEach(item => {
-            const option = document.createElement('option');
-            option.value = item.coverage_id;
-            option.textContent = item.coverage_id;
-            coverageSelect.appendChild(option);
+            const checkboxItem = document.createElement('div');
+            checkboxItem.className = 'checkbox-item';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `coverage-${item.coverage_id}`;
+            checkbox.value = item.coverage_id;
+            checkbox.className = 'coverage-checkbox';
+            
+            const label = document.createElement('label');
+            label.htmlFor = `coverage-${item.coverage_id}`;
+            label.textContent = item.coverage_id;
+            
+            checkboxItem.appendChild(checkbox);
+            checkboxItem.appendChild(label);
+            coverageCheckboxes.appendChild(checkboxItem);
+            
+            // Add change event listener
+            checkbox.addEventListener('change', updateSearchButton);
         });
         
         console.log(`Loaded ${coverageIds.length} coverage IDs`);
@@ -61,8 +77,22 @@ async function loadCoverageIds() {
 
 // Get selected coverage IDs
 function getSelectedCoverageIds() {
-    const selected = Array.from(coverageSelect.selectedOptions).map(option => option.value);
-    return selected;
+    const checkboxes = document.querySelectorAll('.coverage-checkbox:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
+// Update search button state
+function updateSearchButton() {
+    const selectedCount = getSelectedCoverageIds().length;
+    searchBtn.disabled = selectedCount === 0;
+    searchBtn.textContent = selectedCount > 1 ? `Search ${selectedCount} IDs` : 'Search Selected';
+}
+
+// Select all checkboxes
+function selectAll() {
+    const checkboxes = document.querySelectorAll('.coverage-checkbox');
+    checkboxes.forEach(cb => cb.checked = true);
+    updateSearchButton();
 }
 
 // Search for coverage details
@@ -350,8 +380,9 @@ async function exportToExcel() {
 
 // Clear selection
 function clearSelection() {
-    coverageSelect.selectedIndex = -1;
-    searchBtn.disabled = true;
+    const checkboxes = document.querySelectorAll('.coverage-checkbox');
+    checkboxes.forEach(cb => cb.checked = false);
+    updateSearchButton();
     hideResults();
     hideError();
     currentCoverageIds = [];
@@ -379,24 +410,11 @@ function hideError() {
 }
 
 // Event Listeners
-coverageSelect.addEventListener('change', () => {
-    const selectedCount = getSelectedCoverageIds().length;
-    searchBtn.disabled = selectedCount === 0;
-    searchBtn.textContent = selectedCount > 1 ? `Search ${selectedCount} IDs` : 'Search Selected';
-    hideError();
-});
-
 searchBtn.addEventListener('click', searchCoverage);
 clearBtn.addEventListener('click', clearSelection);
+selectAllBtn.addEventListener('click', selectAll);
 exportCsvBtn.addEventListener('click', exportToCsv);
 exportExcelBtn.addEventListener('click', exportToExcel);
-
-// Allow Enter key to search
-coverageSelect.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && getSelectedCoverageIds().length > 0) {
-        searchCoverage();
-    }
-});
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', init);

@@ -17,18 +17,18 @@
             <!-- Search Section -->
             <section class="search-section">
                 <div class="search-box">
-                    <label for="coverage-select">Select Coverage ID(s):</label>
-                    <div class="select-container">
-                        <select id="coverage-select" class="coverage-select" multiple size="8">
-                            <!-- Options will be populated by JavaScript -->
-                        </select>
-                        <div class="select-help">
-                            <p>💡 <strong>Tip:</strong> Hold Ctrl (Windows) or Cmd (Mac) to select multiple IDs</p>
+                    <div class="checkbox-header">
+                        <label>Select Coverage ID(s):</label>
+                        <div class="checkbox-controls">
+                            <button id="select-all-btn" class="btn-link">Select All</button>
+                            <button id="clear-btn" class="btn-link">Clear All</button>
                         </div>
+                    </div>
+                    <div class="checkbox-container" id="coverage-checkboxes">
+                        <!-- Checkboxes will be populated by JavaScript -->
                     </div>
                     <div class="button-group">
                         <button id="search-btn" class="btn btn-primary" disabled>Search Selected</button>
-                        <button id="clear-btn" class="btn btn-secondary">Clear Selection</button>
                     </div>
                 </div>
                 <div id="loading" class="loading" style="display: none;">
