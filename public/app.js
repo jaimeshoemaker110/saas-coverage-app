@@ -1,5 +1,7 @@
-// API Base URL
-const API_BASE = 'http://localhost:3000/api';
+// API Base URL - use relative path for production compatibility
+const API_BASE = window.location.hostname === 'localhost'
+    ? 'http://localhost:3000/api'
+    : '/api';
 
 // DOM Elements
 const coverageSelect = document.getElementById('coverage-select');
