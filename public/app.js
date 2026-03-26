@@ -204,6 +204,8 @@ function createCoverageResultElement(data) {
             <tr>
                 <th>Customer Name</th>
                 <th>Products</th>
+                <th>Possible Metric(s)</th>
+                <th>Where to see</th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -214,30 +216,36 @@ function createCoverageResultElement(data) {
     if (data.customers.length === 0) {
         const row = tbody.insertRow();
         const cell = row.insertCell(0);
-        cell.colSpan = 2;
+        cell.colSpan = 4;
         cell.textContent = 'No customers found for this coverage ID';
         cell.style.textAlign = 'center';
         cell.style.fontStyle = 'italic';
     } else {
         data.customers.forEach(customer => {
-            const row = tbody.insertRow();
-            
-            // Customer name cell
-            const nameCell = row.insertCell(0);
-            nameCell.textContent = customer.name;
-            
-            // Products cell
-            const productsCell = row.insertCell(1);
-            const productsList = document.createElement('ul');
-            productsList.className = 'products-list';
-            
-            customer.products.forEach(product => {
-                const li = document.createElement('li');
-                li.textContent = product;
-                productsList.appendChild(li);
+            customer.products.forEach((product, index) => {
+                const row = tbody.insertRow();
+                
+                // Customer name cell (only show for first product)
+                const nameCell = row.insertCell(0);
+                if (index === 0) {
+                    nameCell.textContent = customer.name;
+                    nameCell.rowSpan = customer.products.length;
+                } else {
+                    row.deleteCell(0);
+                }
+                
+                // Product name cell
+                const productCell = row.insertCell(index === 0 ? 1 : 0);
+                productCell.textContent = typeof product === 'string' ? product : product.name;
+                
+                // Possible Metrics cell
+                const metricsCell = row.insertCell(index === 0 ? 2 : 1);
+                metricsCell.textContent = (typeof product === 'object' && product.possibleMetrics) ? product.possibleMetrics : 'N/A';
+                
+                // Where to see cell
+                const whereCell = row.insertCell(index === 0 ? 3 : 2);
+                whereCell.textContent = (typeof product === 'object' && product.whereToSee) ? product.whereToSee : 'N/A';
             });
-            
-            productsCell.appendChild(productsList);
         });
     }
     

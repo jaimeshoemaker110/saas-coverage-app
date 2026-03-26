@@ -106,11 +106,14 @@ app.get('/api/export/csv/:id', async (req, res) => {
     csv += `"${coverageId}","${details.dataTarget || 'N/A'}","${details.autoTarget || 'N/A'}"\n`;
     csv += '\n'; // Blank row
     
-    // Section 2: Customer and product details
-    csv += 'Coverage ID,Customer Name,Product Name\n';
+    // Section 2: Customer and product details with metrics
+    csv += 'Coverage ID,Customer Name,Product Name,Possible Metric(s),Where to see\n';
     details.customers.forEach(customer => {
       customer.products.forEach(product => {
-        csv += `"${coverageId}","${customer.name}","${product}"\n`;
+        const productName = typeof product === 'string' ? product : product.name;
+        const metrics = typeof product === 'object' ? (product.possibleMetrics || 'N/A') : 'N/A';
+        const whereToSee = typeof product === 'object' ? (product.whereToSee || 'N/A') : 'N/A';
+        csv += `"${coverageId}","${customer.name}","${productName}","${metrics}","${whereToSee}"\n`;
       });
     });
 
@@ -144,11 +147,14 @@ app.get('/api/export/excel/:id', async (req, res) => {
     data.push([coverageId, details.dataTarget || 'N/A', details.autoTarget || 'N/A']);
     data.push([]); // Blank row
     
-    // Section 2: Customer and product details
-    data.push(['Coverage ID', 'Customer Name', 'Product Name']);
+    // Section 2: Customer and product details with metrics
+    data.push(['Coverage ID', 'Customer Name', 'Product Name', 'Possible Metric(s)', 'Where to see']);
     details.customers.forEach(customer => {
       customer.products.forEach(product => {
-        data.push([coverageId, customer.name, product]);
+        const productName = typeof product === 'string' ? product : product.name;
+        const metrics = typeof product === 'object' ? (product.possibleMetrics || 'N/A') : 'N/A';
+        const whereToSee = typeof product === 'object' ? (product.whereToSee || 'N/A') : 'N/A';
+        data.push([coverageId, customer.name, productName, metrics, whereToSee]);
       });
     });
 
@@ -160,7 +166,9 @@ app.get('/api/export/excel/:id', async (req, res) => {
     ws['!cols'] = [
       { wch: 15 },  // Coverage ID
       { wch: 40 },  // Customer Name / Data Target
-      { wch: 40 }   // Product Name / Auto Target
+      { wch: 40 },  // Product Name / Auto Target
+      { wch: 30 },  // Possible Metric(s)
+      { wch: 30 }   // Where to see
     ];
 
     XLSX.utils.book_append_sheet(wb, ws, 'Coverage Data');
@@ -204,11 +212,14 @@ app.post('/api/export/csv/multiple', async (req, res) => {
       csv += `"${details.coverageId}","${details.dataTarget || 'N/A'}","${details.autoTarget || 'N/A'}"\n`;
       csv += '\n'; // Blank row
       
-      // Section 2: Customer and product details
-      csv += 'Coverage ID,Customer Name,Product Name\n';
+      // Section 2: Customer and product details with metrics
+      csv += 'Coverage ID,Customer Name,Product Name,Possible Metric(s),Where to see\n';
       details.customers.forEach(customer => {
         customer.products.forEach(product => {
-          csv += `"${details.coverageId}","${customer.name}","${product}"\n`;
+          const productName = typeof product === 'string' ? product : product.name;
+          const metrics = typeof product === 'object' ? (product.possibleMetrics || 'N/A') : 'N/A';
+          const whereToSee = typeof product === 'object' ? (product.whereToSee || 'N/A') : 'N/A';
+          csv += `"${details.coverageId}","${customer.name}","${productName}","${metrics}","${whereToSee}"\n`;
         });
       });
     });
@@ -250,11 +261,14 @@ app.post('/api/export/excel/multiple', async (req, res) => {
       data.push([details.coverageId, details.dataTarget || 'N/A', details.autoTarget || 'N/A']);
       data.push([]); // Blank row
       
-      // Section 2: Customer and product details
-      data.push(['Coverage ID', 'Customer Name', 'Product Name']);
+      // Section 2: Customer and product details with metrics
+      data.push(['Coverage ID', 'Customer Name', 'Product Name', 'Possible Metric(s)', 'Where to see']);
       details.customers.forEach(customer => {
         customer.products.forEach(product => {
-          data.push([details.coverageId, customer.name, product]);
+          const productName = typeof product === 'string' ? product : product.name;
+          const metrics = typeof product === 'object' ? (product.possibleMetrics || 'N/A') : 'N/A';
+          const whereToSee = typeof product === 'object' ? (product.whereToSee || 'N/A') : 'N/A';
+          data.push([details.coverageId, customer.name, productName, metrics, whereToSee]);
         });
       });
     });
@@ -267,7 +281,9 @@ app.post('/api/export/excel/multiple', async (req, res) => {
     ws['!cols'] = [
       { wch: 15 },  // Coverage ID
       { wch: 40 },  // Customer Name / Data Target
-      { wch: 40 }   // Product Name / Auto Target
+      { wch: 40 },  // Product Name / Auto Target
+      { wch: 30 },  // Possible Metric(s)
+      { wch: 30 }   // Where to see
     ];
 
     XLSX.utils.book_append_sheet(wb, ws, 'Coverage Data');

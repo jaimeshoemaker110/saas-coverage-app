@@ -28,15 +28,18 @@ const workbook = XLSX.readFile(EXCEL_FILE);
 const saasBaseSheet = workbook.Sheets['SaaS Base'];
 const dataTargetsSheet = workbook.Sheets['SaaS Data Targets'];
 const autoTargetsSheet = workbook.Sheets['SaaS Auto Targets'];
+const metricsSheet = workbook.Sheets['Metrics'];
 
 // Convert sheets to JSON
 const saasBaseData = XLSX.utils.sheet_to_json(saasBaseSheet);
 const dataTargetsData = XLSX.utils.sheet_to_json(dataTargetsSheet);
 const autoTargetsData = XLSX.utils.sheet_to_json(autoTargetsSheet);
+const metricsData = XLSX.utils.sheet_to_json(metricsSheet);
 
 console.log(`Loaded ${saasBaseData.length} rows from SaaS Base`);
 console.log(`Loaded ${dataTargetsData.length} rows from Data Targets`);
 console.log(`Loaded ${autoTargetsData.length} rows from Auto Targets`);
+console.log(`Loaded ${metricsData.length} rows from Metrics`);
 
 // Initialize database
 const db = new sqlite3.Database(DB_PATH, (err) => {
@@ -80,6 +83,15 @@ db.serialize(() => {
       coverage_id TEXT PRIMARY KEY,
       target_value INTEGER NOT NULL,
       FOREIGN KEY (coverage_id) REFERENCES coverage(coverage_id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS product_metrics (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      product_name TEXT NOT NULL,
+      possible_metrics TEXT,
+      where_to_see TEXT
     )
   `);
 
@@ -147,6 +159,25 @@ db.serialize(() => {
   insertAutoTarget.finalize();
   console.log('Imported Auto Targets');
 
+  // Import Metrics
+  const insertMetrics = db.prepare(`
+    INSERT INTO product_metrics (product_name, possible_metrics, where_to_see)
+    VALUES (?, ?, ?)
+  `);
+
+  metricsData.forEach(row => {
+    const productName = row['Product'];
+    const possibleMetrics = row['Possible Metric(s)'];
+    const whereToSee = row['Where to see'];
+
+    if (productName) {
+      insertMetrics.run(productName, possibleMetrics || null, whereToSee || null);
+    }
+  });
+
+  insertMetrics.finalize();
+  console.log('Imported Product Metrics');
+
   // Verify import
   db.get('SELECT COUNT(*) as count FROM coverage', (err, row) => {
     if (!err) {
@@ -169,6 +200,12 @@ db.serialize(() => {
   db.get('SELECT COUNT(*) as count FROM auto_target', (err, row) => {
     if (!err) {
       console.log(`Total auto targets: ${row.count}`);
+    }
+  });
+
+  db.get('SELECT COUNT(*) as count FROM product_metrics', (err, row) => {
+    if (!err) {
+      console.log(`Total product metrics: ${row.count}`);
     }
     
     // Close database

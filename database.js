@@ -90,10 +90,12 @@ function getCoverageDetails(db, coverageId) {
   return new Promise((resolve, reject) => {
     const queries = {
       customers: `
-        SELECT DISTINCT customer_name, product_name
-        FROM customer_product
-        WHERE coverage_id = ?
-        ORDER BY customer_name, product_name
+        SELECT DISTINCT cp.customer_name, cp.product_name,
+               pm.possible_metrics, pm.where_to_see
+        FROM customer_product cp
+        LEFT JOIN product_metrics pm ON cp.product_name = pm.product_name
+        WHERE cp.coverage_id = ?
+        ORDER BY cp.customer_name, cp.product_name
       `,
       dataTarget: `
         SELECT target_value
@@ -115,7 +117,7 @@ function getCoverageDetails(db, coverageId) {
       autoTarget: null
     };
 
-    // Get customers and products
+    // Get customers and products with metrics
     db.all(queries.customers, [coverageId], (err, rows) => {
       if (err) {
         reject(err);
@@ -128,7 +130,11 @@ function getCoverageDetails(db, coverageId) {
         if (!customerMap.has(row.customer_name)) {
           customerMap.set(row.customer_name, []);
         }
-        customerMap.get(row.customer_name).push(row.product_name);
+        customerMap.get(row.customer_name).push({
+          name: row.product_name,
+          possibleMetrics: row.possible_metrics,
+          whereToSee: row.where_to_see
+        });
       });
 
       result.customers = Array.from(customerMap.entries()).map(([name, products]) => ({
@@ -136,8 +142,18 @@ function getCoverageDetails(db, coverageId) {
         products
       }));
 
-      // Get unique products
-      result.products = [...new Set(rows.map(r => r.product_name))];
+      // Get unique products with metrics
+      const productMap = new Map();
+      rows.forEach(row => {
+        if (!productMap.has(row.product_name)) {
+          productMap.set(row.product_name, {
+            name: row.product_name,
+            possibleMetrics: row.possible_metrics,
+            whereToSee: row.where_to_see
+          });
+        }
+      });
+      result.products = Array.from(productMap.values());
 
       // Get data target
       db.get(queries.dataTarget, [coverageId], (err, row) => {
