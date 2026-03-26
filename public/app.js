@@ -255,25 +255,23 @@ function createCoverageResultElement(data) {
             customer.products.forEach((product, index) => {
                 const row = tbody.insertRow();
                 
-                // Customer name cell (only show for first product)
-                const nameCell = row.insertCell(0);
+                // Customer name cell (only show for first product, use rowSpan)
                 if (index === 0) {
+                    const nameCell = row.insertCell();
                     nameCell.textContent = customer.name;
                     nameCell.rowSpan = customer.products.length;
-                } else {
-                    row.deleteCell(0);
                 }
                 
                 // Product name cell
-                const productCell = row.insertCell(index === 0 ? 1 : 0);
+                const productCell = row.insertCell();
                 productCell.textContent = typeof product === 'string' ? product : product.name;
                 
                 // Possible Metrics cell
-                const metricsCell = row.insertCell(index === 0 ? 2 : 1);
+                const metricsCell = row.insertCell();
                 metricsCell.textContent = (typeof product === 'object' && product.possibleMetrics) ? product.possibleMetrics : 'N/A';
                 
                 // Where to see cell
-                const whereCell = row.insertCell(index === 0 ? 3 : 2);
+                const whereCell = row.insertCell();
                 whereCell.textContent = (typeof product === 'object' && product.whereToSee) ? product.whereToSee : 'N/A';
             });
         });
